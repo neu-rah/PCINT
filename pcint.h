@@ -1,3 +1,18 @@
+/********************
+Rui Azevedo - ruihfazevedo(@rrob@)gmail.com
+adapted from: http://playground.arduino.cc/Main/PcInt
+with many changes to make it compatible with arduino boards (original worked on Uno)
+not tested on many boards but has the code uses arduino macros for pin mappings 
+it should be more compatible and also more easy to extend
+Sept. 2014
+  small changes to existing PCINT library, supporting an optional cargo parameter
+
+Nov.2014
+  - Use arduino standard macros for PCINT mapping instead of specific map math, broaden compatibility
+  - array[a][b] is 17% faster than array[(a<<3)+b], same memory
+  - reverse pin mappings for pin change check (not on arduino env. AFAIK)
+
+**/	
 #ifndef ARDUINO_PCINT_MANAGER
 #define ARDUINO_PCINT_MANAGER
 	#if ARDUINO < 100
@@ -7,13 +22,27 @@
 	#endif
 	#include "pins_arduino.h"
 
-	volatile uint8_t *port_to_pcmask[] = {
+	/*volatile uint8_t *port_to_pcmask[] = {//no need for volatile as it is only accesed inside interrupt
 		&PCMSK0,
 		&PCMSK1,
 		&PCMSK2
-	};
+	};*/
+	
+	// PCINT reverse map
+	// because some avr's (like 2560) have a messed map we got to have this detailed pin reverse map
+	// still this makes the PCINT automatization very slow, risking interrupt collision
+	#if ( defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega16u4__) )
+		const uint8_t PROGMEM pcintPinMap[3][8]={{8,9,10,11,12,13,-1,-1},{A0,A1,A2,A3,A4,A5,-1,-1},{0,1,2,3,4,5,6,7}};
+	#elif ( defined(__AVR_ATmega2560__) )
+		const uint8_t PROGMEM pcintPinMap[3][8]={{53,52,51,50,10,11,12,13},{0,15,14,-1,-1,-1,-1,-1},{A8,A9,A10,A11,A12,A13,A14,A15}};
+	#else
+		#error "uC PCINT REVERSE MAP IS NOT DEFINED"
+	#endif
+	
+	#define digitalPinFromPCINTSlot(slot,bit) pgm_read_byte(pcintPinMap+(((slot)<<3)+(bit)))
+	#define pcintPinMapBank(slot) ((uint8_t*)(pcintPinMap+((slot)<<3)))
+	#define digitalPinFromPCINTBank(bank,bit) pgm_read_byte(bank+bit)
 
-	static int PCintMode[24];
 
 	//this handler can be used instead of any void(*)() and optionally it can have an associated void *
 	//and use it to call void(*)(void* payload)
@@ -35,101 +64,68 @@
 
 	#define HANDLER_TYPE mixHandler
 
-	//no need for volatile because interrupot handler wont change it
-	static HANDLER_TYPE PCintFunc[24] = {};
-
-	volatile static uint8_t PCintLast[3];
+	static int PCintMode[3][8];
+	static HANDLER_TYPE PCintFunc[3][8];
+	static uint8_t PCintLast[3][8];
 
 	/*
 	 * attach an interrupt to a specific pin using pin change interrupts.
 	 */
-	 void PCattachInterrupt(uint8_t pin, class mixHandler userFunc, int mode) {
-		uint8_t bit = digitalPinToBitMask(pin);
-		uint8_t port = digitalPinToPort(pin);
-		uint8_t slot;
-		volatile uint8_t *pcmask;
-
-		// map pin to PCIR register
-		if (port == NOT_A_PORT) {
-		  return;
-		} 
-		else {
-		  port -= 2;
-		  pcmask = port_to_pcmask[port];
-		}
-
-	// -- Fix by Baziki. In the original sources it was a little bug, which cause analog ports to work incorrectly.
-		if (port == 1) {
-		   slot = port * 8 + (pin - 14);
-		}
-		else {
-		   slot = port * 8 + (pin % 8);
-		}
-	// --Fix end
-		PCintMode[slot] = mode;
-		PCintFunc[slot] = userFunc;
+	void PCattachInterrupt(uint8_t pin, class mixHandler userFunc, int mode) {
+		volatile uint8_t *pcmask=digitalPinToPCMSK(pin);
+		if (!pcmask) return;//runtime checking if pin has PCINT, i would prefer a compile time check
+		uint8_t bit = digitalPinToPCMSKbit(pin);
+		uint8_t mask = 1<<bit;
+		uint8_t pcicrBit=digitalPinToPCICRbit(pin);
+		PCintMode[pcicrBit][bit] = mode;
+		PCintFunc[pcicrBit][bit] = userFunc;
+		//initialize last status flags
+		PCintLast[pcicrBit][bit]=(*portInputRegister(digitalPinToPort(pin)))&digitalPinToBitMask(pin);
 		// set the mask
-		*pcmask |= bit;
+		*pcmask |= mask;
 		// enable the interrupt
-		PCICR |= 0x01 << port;
+		PCICR |= (1<<pcicrBit);
 	}
 
 	void PCdetachInterrupt(uint8_t pin) {
-		uint8_t bit = digitalPinToBitMask(pin);
-		uint8_t port = digitalPinToPort(pin);
-		volatile uint8_t *pcmask;
-
-		// map pin to PCIR register
-		if (port == NOT_A_PORT) {
-		  return;
-		} 
-		else {
-		  port -= 2;
-		  pcmask = port_to_pcmask[port];
-		}
-
+		volatile uint8_t *pcmask=digitalPinToPCMSK(pin);
+		if (!pcmask) return;//runtime checking if pin has PCINT, i would prefer a compile time check
 		// disable the mask.
-		*pcmask &= ~bit;
+		*pcmask &= ~(1<<digitalPinToPCMSKbit(pin));
 		// if that's the last one, disable the interrupt.
-		if (*pcmask == 0) {
-		  PCICR &= ~(0x01 << port);
-		}
+		if (*pcmask == 0)
+		  PCICR &= ~(1<<digitalPinToPCICRbit(pin));
 	}
 
+        volatile int x=0;
 	// common code for isr handler. "port" is the PCINT number.
 	// there isn't really a good way to back-map ports and masks to pins.
+	// here we consider only the first change found ignoring subsequent, assuming no interrupt cascade
 	static void PCint(uint8_t port) {
-		uint8_t bit;
-		uint8_t curr;
-		uint8_t mask;
-		uint8_t pin;
-
-		// get the pin states for the indicated port.
-		curr = *portInputRegister(port+2);
-		mask = curr ^ PCintLast[port];
-		PCintLast[port] = curr;
-		// mask is pins that have changed. screen out non pcint pins.
-		if ((mask &= *port_to_pcmask[port]) == 0) {
-		  return;
-		}
-		// mask is pcint pins that have changed.
-		for (uint8_t i=0; i < 8; i++) {
-		  bit = 0x01 << i;
-		  if (bit & mask) {
-		    pin = port * 8 + i;
-		    // Trigger interrupt if mode is CHANGE, or if mode is RISING and
-		    // the bit is currently high, or if mode is FALLING and bit is low.
-		    if ((PCintMode[pin] == CHANGE
-		        || ((PCintMode[pin] == RISING) && (curr & bit))
-		        || ((PCintMode[pin] == FALLING) && !(curr & bit)))
-		        && (PCintFunc[pin] != NULL)) {
-		      PCintFunc[pin]();
-		    }
-		  }
+		const uint8_t* map=pcintPinMapBank(port);//get 8 bit pin change map
+		for(int i=0;i<8;i++) {
+			uint8_t p=digitalPinFromPCINTBank(map,i);
+			if (p==-1) continue;//its not assigned
+			//uint8_t bit = digitalPinToPCMSKbit(p);
+			//uint8_t mask = (1<<bit);
+			if (PCintFunc[port][i]!=NULL) {//only check active pins
+				uint8_t stat=(*portInputRegister(digitalPinToPort(p)))&digitalPinToBitMask(p);
+				if (PCintLast[port][i]^stat) {//pin changed!
+					if (
+            PCintMode[port][i]==CHANGE
+            || (stat&&(PCintMode[port][i]==RISING))
+            || ((!stat)&&(PCintMode[port][i]==FALLING))
+		      ) {
+	 				  PCintLast[port][i]=stat;
+	 				  PCintFunc[port][i]();
+						break;
+		      }
+				}
+			}
 		}
 	}
 
-	//AVR hadle pin change per port.. later figure it out the pin
+	//AVR handle pin change... later figure it out the pin
 	SIGNAL(PCINT0_vect) {
 		PCint(0);
 	}
@@ -141,3 +137,4 @@
 	}
 
 #endif
+
