@@ -20,9 +20,10 @@ void setup() {
   for(int slot=0;slot<mapSz;slot++) {
     Serial.print(slot?",":"");
     Serial.print("{");
-    for(int bit=0;bit<8;bit++)
+    for(int bit=0;bit<8;bit++) []
       Serial.print(bit?",":"");
       Serial.print(pcintPins[slot][bit]);
+    }
     Serial.print("}");
   }
   Serial.println("};");
