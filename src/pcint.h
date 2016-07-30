@@ -38,25 +38,11 @@ Nov.2014 large changes
 		#elif ( defined(__AVR_ATmega2560__) )
 			const uint8_t PROGMEM pcintPinMap[3][8]={{53,52,51,50,10,11,12,13},{0,15,14,-1,-1,-1,-1,-1},{A8,A9,A10,A11,A12,A13,A14,A15}};
 		#elif ( defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega644__))
-			#warning "Using ATMega1284/1284P/644"
-			#define digitalPinFromPCINTSlot(slot,bit) pgm_read_byte(digital_pin_to_pcint+(((slot)<<3)+(bit)))
-			#define pcintPinMapBank(slot) ((uint8_t*)((uint8_t*)digital_pin_to_pcint+((slot)<<3)))
-			#if MIGHTY_1284P_VARIANT == BOBUINO
-				#warning "Using BOBUINO variant"
-				const uint8_t PROGMEM pcintPinMap[3][8]={{21,20,19,18,17,16,30,31},{4,5,6,7,10,11,12,13},{29,28,24,25,26,27,15,14}};
-				//BOBUINO
-				//https://camo.githubusercontent.com/6be59711fba13a714d1ee2be990e3b9b79b9748f/687474703a2f2f692e696d6775722e636f6d2f664843354c514b2e706e67
-				//const uint8_t PROGMEM pcintPinMap[3][8]={{21,20,19,18,17,16,15,14},{4,5,6,7,10,11,12,13},{22,23,24,25,26,27,28,29}};
-				//const uint8_t PROGMEM pcintPinMap[3][8]={{24,25,10,11,8,9,26,27},{29,30,12,13,14,15,7,6},{5,4,3,2,1,0,16,17}};
-				//#error "uC PCINT REVERSE MAP IS NOT DEFINED, ATmega1284P BOBUINO, choose variant pinmap on file pcint.h"
-			#else
-				//http://orig06.deviantart.net/00ad/f/2013/038/6/7/atmega1284p_by_pighixxx-d5u4aed.png
-				//const uint8_t PROGMEM pcintPinMap[3][8]={{24,25,26,27,28,29,20,31},{0,1,2,3,4,5,6,7},{16,17,18,19,20,21,22,23}};
-				//const uint8_t PROGMEM pcintPinMap[3][8]={{21,20,19,18,17,16,15,14},{4,5,6,7,10,11,12,13},{22,23,24,25,26,27,28,29}};
-				//Uno_Pro
-				const uint8_t PROGMEM pcintPinMap[3][8]={{21,20,19,18,17,16,15,14},{4,5,2,3,10,11,12,13},{22,23,24,25,26,27,28,29}};
-				//#error "uC PCINT REVERSE MAP IS NOT DEFINED, ATmega1284P variant unknown"
-			#endif
+			//PCINT map for Bobuino and Skinny Bob
+			//const uint8_t PROGMEM pcintPinMap[3][8]={{21,20,19,18,17,16,15,14},{4,5,6,7,10,11,12,13},{22,23,24,25,26,27,28,29}};
+			//PCINT map for Arduinpo Uno*Pro
+			//const uint8_t PROGMEM pcintPinMap[3][8]={{21,20,19,18,17,16,15,14},{4,5,2,3,10,11,12,13},{22,23,24,25,26,27,28,29}};
+			#error "uC PCINT REVERSE MAP IS NOT DEFINED, ATmega1284P variant unknown"
 		#else
 			#error "uC PCINT REVERSE MAP IS NOT DEFINED"
 		#endif

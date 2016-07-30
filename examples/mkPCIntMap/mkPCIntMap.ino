@@ -1,4 +1,3 @@
-#include <streamFlow.h>
 #define mapSz 3
 int8_t pcintPins[mapSz][8];
 
