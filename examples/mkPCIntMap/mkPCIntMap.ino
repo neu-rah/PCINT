@@ -18,7 +18,7 @@ void setup() {
   Serial.println("//PCINT map for <put BOARD_NAME here>");
   Serial.print("const uint8_t PROGMEM pcintPinMap[3][8]={");
   for(int slot=0;slot<mapSz;slot++) {
-    Serialprint(slot?",":"");
+    Serial.print(slot?",":"");
     Serial.print("{");
     for(int bit=0;bit<8;bit++)
       Serial.print(bit?",":"");
