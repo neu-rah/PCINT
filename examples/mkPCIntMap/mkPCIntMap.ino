@@ -15,6 +15,9 @@ void setup() {
     //Serial<<pin<<": pcmask:"<<*pcmask<<" bit:"<<bit<<" mask:"<<mask<<" pcirBit:"<<pcicrBit<<endl;
     if (pcicrBit<3) pcintPins[pcicrBit][bit]=pin;
   }
+}
+
+void loop() {
   Serial.println("//PCINT map for <put BOARD_NAME here>");
   Serial.print("const uint8_t PROGMEM pcintPinMap[3][8]={");
   for(int slot=0;slot<mapSz;slot++) {
@@ -28,7 +31,8 @@ void setup() {
   }
   Serial.println("};");
   Serial.flush();
-}
-
-void loop() {
+  delay(5000);
+  Serial.println();
+  Serial.println();
+  Serial.println();
 }
