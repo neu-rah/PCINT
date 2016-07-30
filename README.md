@@ -36,7 +36,7 @@ void loop() {}
 ```c++
 void PCattachInterrupt(uint8_t pin, class mixHandler userFunc, uint8_t mode);
 ```
-monitor pin and call user funtion on change.
+monitor pin and call user function on change.
 
 - pin - your board pin number
 - userFunc - function to be called on pin change
