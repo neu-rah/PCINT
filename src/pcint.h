@@ -17,61 +17,67 @@ Nov.2014 large changes
 **/
 #ifndef ARDUINO_PCINT_MANAGER
 #define ARDUINO_PCINT_MANAGER
+
 	#if ARDUINO < 100
-	#include <WProgram.h>
+		#include <WProgram.h>
 	#else
-	#include <Arduino.h>
+		#include <Arduino.h>
 	#endif
 	#include "pins_arduino.h"
 
+	typedef void (*voidFuncPtr)(void);
+
+	#ifdef ARDUINO_SAM_DUE
+		//no payload support on arduino due
+		#define HANDLER_TYPE voidFuncPtr
+	#else
 	// PCINT reverse map
 	// because some avr's (like 2560) have a messed map we got to have this detailed pin reverse map
 	// still this makes the PCINT automatization very slow, risking interrupt collision
-	#if defined(digital_pin_to_pcint)
-		#define digitalPinFromPCINTSlot(slot,bit) pgm_read_byte(digital_pin_to_pcint+(((slot)<<3)+(bit)))
-		#define pcintPinMapBank(slot) ((uint8_t*)((uint8_t*)digital_pin_to_pcint+((slot)<<3)))
-	#else
-		#warning using maps!
-		#if ( defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega16u4__) )
-			//UNO
-			//const uint8_t PROGMEM pcintPinMap[3][8]={{8,9,10,11,12,13,-1,-1},{A0,A1,A2,A3,A4,A5,-1,-1},{0,1,2,3,4,5,6,7}};
-			const uint8_t pcintPinMap[3][8] PROGMEM={{8,9,10,11,12,13,-1,-1},{14,15,16,17,18,19,20,21},{0,1,2,3,4,5,6,7}};
-		#elif ( defined(__AVR_ATmega2560__) )
-			const uint8_t pcintPinMap[3][8] PROGMEM={{53,52,51,50,10,11,12,13},{0,15,14,-1,-1,-1,-1,-1},{A8,A9,A10,A11,A12,A13,A14,A15}};
-		#elif ( defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega644__))
-			#error "uC PCINT REVERSE MAP IS NOT DEFINED, ATmega1284P variant unknown"
+		#if defined(digital_pin_to_pcint)
+			#define digitalPinFromPCINTSlot(slot,bit) pgm_read_byte(digital_pin_to_pcint+(((slot)<<3)+(bit)))
+			#define pcintPinMapBank(slot) ((uint8_t*)((uint8_t*)digital_pin_to_pcint+((slot)<<3)))
 		#else
-			#warning "uC PCINT REVERSE MAP IS NOT DEFINED"
+			#warning using maps!
+			#if ( defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega16u4__) )
+				//UNO
+				const uint8_t pcintPinMap[3][8] PROGMEM={{8,9,10,11,12,13,-1,-1},{14,15,16,17,18,19,20,21},{0,1,2,3,4,5,6,7}};
+			#elif ( defined(__AVR_ATmega2560__) )
+				const uint8_t pcintPinMap[3][8] PROGMEM={{53,52,51,50,10,11,12,13},{0,15,14,-1,-1,-1,-1,-1},{A8,A9,A10,A11,A12,A13,A14,A15}};
+			#elif ( defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega644__))
+				#error "uC PCINT REVERSE MAP IS NOT DEFINED, ATmega1284P variant unknown"
+				//run the mkPCIntMap example to obtain a map for your board!
+			#else
+				#warning "uC PCINT REVERSE MAP IS NOT DEFINED"
+				//run the mkPCIntMap example to obtain a map for your board!
+			#endif
+			#define digitalPinFromPCINTSlot(slot,bit) pgm_read_byte(pcintPinMap+(((slot)<<3)+(bit)))
+			#define pcintPinMapBank(slot) ((uint8_t*)((uint8_t*)pcintPinMap+((slot)<<3)))
 		#endif
-		#define digitalPinFromPCINTSlot(slot,bit) pgm_read_byte(pcintPinMap+(((slot)<<3)+(bit)))
-		#define pcintPinMapBank(slot) ((uint8_t*)((uint8_t*)pcintPinMap+((slot)<<3)))
+		#define digitalPinFromPCINTBank(bank,bit) pgm_read_byte((uint8_t*)bank+bit)
+		#define HANDLER_TYPE mixHandler
+
+		//this handler can be used instead of any void(*)() and optionally it can have an associated void *
+		//and use it to call void(*)(void* payload)
+		struct mixHandler {
+			union {
+				void (*voidFunc)(void);
+				void (*payloadFunc)(void*);
+			} handler;
+			void *payload;
+			inline mixHandler():payload(NULL) {handler.voidFunc=NULL;}
+			inline mixHandler(void (*f)(void)):payload(NULL) {handler.voidFunc=f;}
+			inline mixHandler(void (*f)(void*),void *payload):payload(payload) {handler.payloadFunc=f;}
+			inline void operator()() {payload?handler.payloadFunc(payload):handler.voidFunc();}
+			inline bool operator==(void*ptr) {return handler.voidFunc==ptr;}
+			inline bool operator!=(void*ptr) {return handler.voidFunc!=ptr;}
+		};
+
 	#endif
-	#define digitalPinFromPCINTBank(bank,bit) pgm_read_byte((uint8_t*)bank+bit)
-
-	//this handler can be used instead of any void(*)() and optionally it can have an associated void *
-	//and use it to call void(*)(void* payload)
-	struct mixHandler {
-		union {
-			void (*voidFunc)(void);
-			void (*payloadFunc)(void*);
-		} handler;
-		void *payload;
-		inline mixHandler():payload(NULL) {handler.voidFunc=NULL;}
-		inline mixHandler(void (*f)(void)):payload(NULL) {handler.voidFunc=f;}
-		inline mixHandler(void (*f)(void*),void *payload):payload(payload) {handler.payloadFunc=f;}
-		inline void operator()() {payload?handler.payloadFunc(payload):handler.voidFunc();}
-		inline bool operator==(void*ptr) {return handler.voidFunc==ptr;}
-		inline bool operator!=(void*ptr) {return handler.voidFunc!=ptr;}
-	};
-
-	typedef void (*voidFuncPtr)(void);
-
-	#define HANDLER_TYPE mixHandler
-
-	/*
+		/*
 	 * attach an interrupt to a specific pin using pin change interrupts.
 	 */
-	void PCattachInterrupt(uint8_t pin, class mixHandler userFunc, uint8_t mode);
+	void PCattachInterrupt(uint8_t pin, HANDLER_TYPE userFunc, uint8_t mode);
 
 	void PCdetachInterrupt(uint8_t pin);
 

@@ -9,7 +9,7 @@ void setled() {
 
 void setup() {
   pinMode(led,OUTPUT);
-  pinMode(btn,INPUT);
+  pinMode(btn,INPUT_PULLUP);
   digitalWrite(btn,1);//pullup
   PCattachInterrupt(btn,setled,CHANGE);
   setled();//initial led status
