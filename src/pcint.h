@@ -31,20 +31,17 @@ Nov.2014 large changes
 		#define digitalPinFromPCINTSlot(slot,bit) pgm_read_byte(digital_pin_to_pcint+(((slot)<<3)+(bit)))
 		#define pcintPinMapBank(slot) ((uint8_t*)((uint8_t*)digital_pin_to_pcint+((slot)<<3)))
 	#else
+		#warning using maps!
 		#if ( defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega16u4__) )
 			//UNO
 			//const uint8_t PROGMEM pcintPinMap[3][8]={{8,9,10,11,12,13,-1,-1},{A0,A1,A2,A3,A4,A5,-1,-1},{0,1,2,3,4,5,6,7}};
-			const uint8_t PROGMEM pcintPinMap[3][8]={{8,9,10,11,12,13,-1,-1},{14,15,16,17,18,19,20,21},{0,1,2,3,4,5,6,7}};
+			const uint8_t pcintPinMap[3][8] PROGMEM={{8,9,10,11,12,13,-1,-1},{14,15,16,17,18,19,20,21},{0,1,2,3,4,5,6,7}};
 		#elif ( defined(__AVR_ATmega2560__) )
-			const uint8_t PROGMEM pcintPinMap[3][8]={{53,52,51,50,10,11,12,13},{0,15,14,-1,-1,-1,-1,-1},{A8,A9,A10,A11,A12,A13,A14,A15}};
+			const uint8_t pcintPinMap[3][8] PROGMEM={{53,52,51,50,10,11,12,13},{0,15,14,-1,-1,-1,-1,-1},{A8,A9,A10,A11,A12,A13,A14,A15}};
 		#elif ( defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega644__))
-			//PCINT map for Bobuino and Skinny Bob
-			//const uint8_t PROGMEM pcintPinMap[3][8]={{21,20,19,18,17,16,15,14},{4,5,6,7,10,11,12,13},{22,23,24,25,26,27,28,29}};
-			//PCINT map for Arduinpo Uno*Pro
-			//const uint8_t PROGMEM pcintPinMap[3][8]={{21,20,19,18,17,16,15,14},{4,5,2,3,10,11,12,13},{22,23,24,25,26,27,28,29}};
 			#error "uC PCINT REVERSE MAP IS NOT DEFINED, ATmega1284P variant unknown"
 		#else
-			#error "uC PCINT REVERSE MAP IS NOT DEFINED"
+			#warning "uC PCINT REVERSE MAP IS NOT DEFINED"
 		#endif
 		#define digitalPinFromPCINTSlot(slot,bit) pgm_read_byte(pcintPinMap+(((slot)<<3)+(bit)))
 		#define pcintPinMapBank(slot) ((uint8_t*)((uint8_t*)pcintPinMap+((slot)<<3)))
