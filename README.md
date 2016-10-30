@@ -2,6 +2,10 @@
 
 ## Pin Change Interrupt Library
 
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](http://creativecommons.org/licenses/by-nc-sa/4.0/)
+[![Build Status](https://travis-ci.org/neu-rah/PCINT.svg?branch=master)](https://travis-ci.org/neu-rah/PCINT)
+
+
 An arsuino pin change interrupt library compatible with AVR and SAM with consistent interface.
 
 Allows handlers to be called with a predefined cargo (void*) for user data or just regular void returning functions with no params.
