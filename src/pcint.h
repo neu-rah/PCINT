@@ -27,10 +27,9 @@ Nov.2014 large changes
 
 	typedef void (*voidFuncPtr)(void);
 
-	#ifdef ARDUINO_SAM_DUE
-		//no payload support on arduino due
-		#define HANDLER_TYPE voidFuncPtr
-	#else
+	#define HANDLER_TYPE mixHandler
+
+	#ifndef ARDUINO_SAM_DUE
 	// PCINT reverse map
 	// because some avr's (like 2560) have a messed map we got to have this detailed pin reverse map
 	// still this makes the PCINT automatization very slow, risking interrupt collision
@@ -55,35 +54,58 @@ Nov.2014 large changes
 			#define pcintPinMapBank(slot) ((uint8_t*)((uint8_t*)pcintPinMap+((slot)<<3)))
 		#endif
 		#define digitalPinFromPCINTBank(bank,bit) pgm_read_byte((uint8_t*)bank+bit)
-		#define HANDLER_TYPE mixHandler
-
-		//this handler can be used instead of any void(*)() and optionally it can have an associated void *
-		//and use it to call void(*)(void* payload)
-		struct mixHandler {
-			union {
-				void (*voidFunc)(void);
-				void (*payloadFunc)(void*);
-			} handler;
-			void *payload;
-			inline mixHandler():payload(NULL) {handler.voidFunc=NULL;}
-			inline mixHandler(void (*f)(void)):payload(NULL) {handler.voidFunc=f;}
-			inline mixHandler(void (*f)(void*),void *payload):payload(payload) {handler.payloadFunc=f;}
-			inline void operator()() {payload?handler.payloadFunc(payload):handler.voidFunc();}
-			inline bool operator==(void*ptr) {return handler.voidFunc==ptr;}
-			inline bool operator!=(void*ptr) {return handler.voidFunc!=ptr;}
-		};
 
 	#endif
-		/*
-	 * attach an interrupt to a specific pin using pin change interrupts.
-	 */
-	void PCattachInterrupt(uint8_t pin, HANDLER_TYPE userFunc, uint8_t mode);
 
+	//this handler can be used instead of any void(*)() and optionally it can have an associated void *
+	//and use it to call void(*)(void* payload)
+	struct mixHandler {
+		union {
+			void (*voidFunc)(void);
+			void (*payloadFunc)(void*);
+		} handler;
+		void *payload;
+		inline mixHandler():payload(NULL) {handler.voidFunc=NULL;}
+		inline mixHandler(void (*f)(void)):payload(NULL) {handler.voidFunc=f;}
+		inline mixHandler(void (*f)(void*),void *payload):payload(payload) {handler.payloadFunc=f;}
+		inline void operator()() {payload?handler.payloadFunc(payload):handler.voidFunc();}
+		inline bool operator==(void*ptr) {return handler.voidFunc==ptr;}
+		inline bool operator!=(void*ptr) {return handler.voidFunc!=ptr;}
+	};
+
+	#ifdef ARDUINO_SAM_DUE
+	  extern HANDLER_TYPE PCintFunc[NUM_DIGITAL_PINS];
+	  template<uint8_t N> void PCint() {PCintFunc[N]();}
+	#else
+	void PCattachInterrupt(uint8_t pin,HANDLER_TYPE userFunc, uint8_t mode);
 	void PCdetachInterrupt(uint8_t pin);
 
 	// common code for isr handler. "port" is the PCINT number.
 	// there isn't really a good way to back-map ports and masks to pins.
 	// here we consider only the first change found ignoring subsequent, assuming no interrupt cascade
 	static void PCint(uint8_t port);
+
+	#endif
+	/*
+	 * attach an interrupt to a specific pin using pin change interrupts.
+	 */
+	template<uint8_t PIN>
+	void PCattachInterrupt(HANDLER_TYPE userFunc, uint8_t mode) {
+	  #ifdef ARDUINO_SAM_DUE
+	    attachInterrupt(digitalPinToInterrupt(PIN),PCint<PIN>,mode);
+	  #else
+			PCattachInterrupt(PIN,userFunc,mode);
+	  #endif
+	}
+
+	template<uint8_t PIN>
+	void PCdetachInterrupt() {
+		#ifdef ARDUINO_SAM_DUE
+	    detachInterrupt(PIN);
+	  #else
+			PCdetachInterrupt(PIN);
+	  #endif
+	}
+
 
 #endif

@@ -3,15 +3,12 @@
 #define led 13
 #define btn 12
 
-void setled() {
-  digitalWrite(led,digitalRead(btn));
-}
+void setled() {digitalWrite(led,digitalRead(btn));}
 
 void setup() {
   pinMode(led,OUTPUT);
   pinMode(btn,INPUT_PULLUP);
-  digitalWrite(btn,1);//pullup
-  PCattachInterrupt(btn,setled,CHANGE);
+  PCattachInterrupt<btn>(setled,CHANGE);
   setled();//initial led status
 }
 

@@ -1,10 +1,18 @@
 # PCINT
 
-Yet another Arduino PCINT library
+## Pin Change Interrupt Library
 
-Allows handlers to be called with a predefined cargo (void*) for user data.
+An arsuino pin change interrupt library compatible with AVR and SAM with consistent interface.
+
+Allows handlers to be called with a predefined cargo (void*) for user data or just regular void returning functions with no params.
+
+This library use mata-programing to achieve consistency.
 
 If your board is not supported please see mkPCIntMap example.
+
+Supporting 328, 2560 and due, example sketch to oobtain pin maps for other avrs.
+
+If you use the example to build maps for other AVR's please let me know so that i can include them for benefit of other users. Thanks.
 
 ## Example
 
@@ -20,9 +28,8 @@ void setled() {
 
 void setup() {
   pinMode(led,OUTPUT);
-  pinMode(btn,INPUT);
-  digitalWrite(btn,1);//pullup
-  PCattachInterrupt(btn,setled,CHANGE);
+  pinMode(btn,INPUT_PULLUP);
+  PCattachInterrupt<btn>(setled,CHANGE);
   setled();//initial led status
 }
 
@@ -34,7 +41,7 @@ void loop() {}
 ### PCattachInterrupt
 
 ```c++
-void PCattachInterrupt(uint8_t pin, class mixHandler userFunc, uint8_t mode);
+void PCattachInterrupt<pin>(userFunc,mode);
 ```
 monitor pin and call user function on change.
 
@@ -45,7 +52,7 @@ monitor pin and call user function on change.
 ### PCdetachInterrupt
 
 ```c++
-void PCdetachInterrupt(uint8_t pin);
+void PCdetachInterrupt<pin>();
 ```
 
 stop monitoring pin change on given pin.
@@ -54,7 +61,11 @@ stop monitoring pin change on given pin.
 
 ## History
 
+(Oct 2016) V4.0 changed API to support arduino due.
+
 (Jul 2016) added skectch to print PCINT maps, please pull or send me new maps.
 This allows you to add support for your board pinout definition.
 
 (Nov.2014) using arduino PCINT macros for wider compatibility
+
+(Sep.2014) Made this because i need a PCINT handler that can have extra data attached.

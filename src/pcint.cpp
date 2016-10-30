@@ -1,17 +1,17 @@
 #include "pcint.h"
 
-#ifndef ARDUINO_SAM_DUE
+#ifdef ARDUINO_SAM_DUE
+  HANDLER_TYPE PCintFunc[NUM_DIGITAL_PINS];
+  template<int N>  void PCint() {PCintFunc[N]();}
+  //static voidFuncPtr PCints[NUM_DIGITAL_PINS];
+  //PCints[0]=PCint<0>;
+  //PCints[1]=PCint<1>;
+#else
   static int PCintMode[3][8];
   static HANDLER_TYPE PCintFunc[3][8];
   static bool PCintLast[3][8];//?we can use only 3 bytes... but will use more processing power calculating masks
-#endif
-/*
- * attach an interrupt to a specific pin using pin change interrupts.
- */
-void PCattachInterrupt(uint8_t pin, HANDLER_TYPE userFunc, uint8_t mode) {
-  #ifdef ARDUINO_SAM_DUE
-    attachInterrupt(digitalPinToInterrupt(pin),userFunc,mode);
-  #else
+
+  void PCattachInterrupt(uint8_t pin,HANDLER_TYPE userFunc, uint8_t mode) {
     volatile uint8_t *pcmask=digitalPinToPCMSK(pin);
     if (!pcmask) return;//runtime checking if pin has PCINT, i would prefer a compile time check
     uint8_t bit = digitalPinToPCMSKbit(pin);
@@ -25,13 +25,9 @@ void PCattachInterrupt(uint8_t pin, HANDLER_TYPE userFunc, uint8_t mode) {
     *pcmask |= mask;
     // enable the interrupt
     PCICR |= (1<<pcicrBit);
-  #endif
-}
+  }
 
-void PCdetachInterrupt(uint8_t pin) {
-  #ifdef ARDUINO_SAM_DUE
-    detachInterrupt(pin);
-  #else
+  void PCdetachInterrupt(uint8_t pin) {
     volatile uint8_t *pcmask=digitalPinToPCMSK(pin);
     if (!pcmask) return;//runtime checking if pin has PCINT, i would prefer a compile time check
     // disable the mask.
@@ -39,10 +35,8 @@ void PCdetachInterrupt(uint8_t pin) {
     // if that's the last one, disable the interrupt.
     if (*pcmask == 0)
       PCICR &= ~(1<<digitalPinToPCICRbit(pin));
-  #endif
-}
+  }
 
-#ifndef ARDUINO_SAM_DUE
   // common code for isr handler. "port" is the PCINT number.
   // there isn't really a good way to back-map ports and masks to pins.
   // here we consider only the first change found ignoring subsequent, assuming no interrupt cascade
