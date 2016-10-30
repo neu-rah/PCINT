@@ -6,7 +6,7 @@
 [![Build Status](https://travis-ci.org/neu-rah/PCINT.svg?branch=master)](https://travis-ci.org/neu-rah/PCINT)
 
 
-An arsuino pin change interrupt library compatible with AVR and SAM with consistent interface.
+Arduino pin change interrupt library compatible with AVR and SAM with consistent interface.
 
 Allows handlers to be called with a predefined cargo (void*) for user data or just regular void returning functions with no params.
 
