@@ -19,4 +19,4 @@ install:
    - pip install -U platformio
 
 script:
-   - platformio ci --lib="." --board=nanoatmega328 --board=due
+   - platformio ci --lib="." --board=nanoatmega328 --board=due --board=teensy31
