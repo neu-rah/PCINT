@@ -29,7 +29,13 @@ Nov.2014 large changes
 
 	#define HANDLER_TYPE mixHandler
 
-	#if defined(__MK20DX256__) || defined(ARDUINO_SAM_DUE)
+	/*#if (defined (_mk20dx128_h_) || defined (__MK20DX128__)) && defined (CORE_TEENSY)
+	#define RSITE_TEENSY3
+	#endif
+	defined(RSITE_TEENSY3) || defined(ARDUINO_SAM_DUE)*/
+
+	#if defined(__arm__)
+		#warning Compiling for arm
 		#define PCINT_NO_MAPS
 	#endif
 
