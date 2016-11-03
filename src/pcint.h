@@ -29,7 +29,11 @@ Nov.2014 large changes
 
 	#define HANDLER_TYPE mixHandler
 
-	#ifndef ARDUINO_SAM_DUE
+	#if defined(__MK20DX256__) || defined(ARDUINO_SAM_DUE)
+		#define PCINT_NO_MAPS
+	#endif
+
+	#ifndef PCINT_NO_MAPS
 	// PCINT reverse map
 	// because some avr's (like 2560) have a messed map we got to have this detailed pin reverse map
 	// still this makes the PCINT automatization very slow, risking interrupt collision
@@ -73,7 +77,7 @@ Nov.2014 large changes
 		inline bool operator!=(void*ptr) {return handler.voidFunc!=ptr;}
 	};
 
-	#ifdef ARDUINO_SAM_DUE
+	#ifdef PCINT_NO_MAPS
 	  extern HANDLER_TYPE PCintFunc[NUM_DIGITAL_PINS];
 	  template<uint8_t N> void PCint() {PCintFunc[N]();}
 	#else
@@ -91,7 +95,7 @@ Nov.2014 large changes
 	 */
 	template<uint8_t PIN>
 	void PCattachInterrupt(HANDLER_TYPE userFunc, uint8_t mode) {
-	  #ifdef ARDUINO_SAM_DUE
+	  #ifdef PCINT_NO_MAPS
 	    attachInterrupt(digitalPinToInterrupt(PIN),PCint<PIN>,mode);
 	  #else
 			PCattachInterrupt(PIN,userFunc,mode);
@@ -100,7 +104,7 @@ Nov.2014 large changes
 
 	template<uint8_t PIN>
 	void PCdetachInterrupt() {
-		#ifdef ARDUINO_SAM_DUE
+		#ifdef PCINT_NO_MAPS
 	    detachInterrupt(PIN);
 	  #else
 			PCdetachInterrupt(PIN);

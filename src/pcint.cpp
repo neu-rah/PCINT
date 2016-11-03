@@ -1,6 +1,6 @@
 #include "pcint.h"
 
-#ifdef ARDUINO_SAM_DUE
+#ifdef PCINT_NO_MAPS
   HANDLER_TYPE PCintFunc[NUM_DIGITAL_PINS];
   template<int N>  void PCint() {PCintFunc[N]();}
   //static voidFuncPtr PCints[NUM_DIGITAL_PINS];
