@@ -14,9 +14,9 @@ This library use meta-programing to achieve consistency.
 
 If your board is not supported please see mkPCIntMap example.
 
-Supporting 328, 2560 and due, example sketch to oobtain pin maps for other avrs.
+Supporting 328, 2560 and due and including example sketch to obtain pin maps for other MCUs.
 
-If you use the example to build maps for other AVR's please let me know so that i can include them for benefit of other users. Thanks.
+If you use the example to build maps for other AVR's please let me know (pull request) so that i can include them for benefit of other users. Thanks.
 
 ## Example
 
