@@ -10,7 +10,7 @@ Arduino pin change interrupt library compatible with AVR and SAM with consistent
 
 Allows handlers to be called with a predefined cargo (void*) for user data or just regular void returning functions with no params.
 
-This library use mata-programing to achieve consistency.
+This library use meta-programing to achieve consistency.
 
 If your board is not supported please see mkPCIntMap example.
 
