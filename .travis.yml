@@ -13,7 +13,7 @@ cache:
        - "~/.platformio"
 
 env:
-   - PLATFORMIO_CI_SRC=examples/btnled/btnled.ino
+   - PLATFORMIO_CI_SRC=examples/btnled/btnled/btnled.ino
 
 install:
    - pip install -U platformio
