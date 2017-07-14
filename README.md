@@ -10,13 +10,13 @@ Arduino pin change interrupt library compatible with AVR and SAM with consistent
 
 Allows handlers to be called with a predefined cargo (void*) for user data or just regular void returning functions with no params.
 
-This library use mata-programing to achieve consistency.
+This library use meta-programing to achieve consistency.
 
 If your board is not supported please see mkPCIntMap example.
 
-Supporting 328, 2560 and due, example sketch to oobtain pin maps for other avrs.
+Supporting 328, 2560 and due and including example sketch to obtain pin maps for other MCUs.
 
-If you use the example to build maps for other AVR's please let me know so that i can include them for benefit of other users. Thanks.
+If you use the example to build maps for other AVR's please let me know (pull request) so that i can include them for benefit of other users. Thanks.
 
 ## Example
 
