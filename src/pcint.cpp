@@ -12,7 +12,6 @@
   static bool PCintLast[3][8];//?we can use only 3 bytes... but will use more processing power calculating masks
 
   void PCattachInterrupt(uint8_t pin,HANDLER_TYPE userFunc, uint8_t mode) {
-    this wont be a valid c++ expression... so give compilation error!!!
     volatile uint8_t *pcmask=digitalPinToPCMSK(pin);
     if (!pcmask) return;//runtime checking if pin has PCINT, i would prefer a compile time check
     uint8_t bit = digitalPinToPCMSKbit(pin);
