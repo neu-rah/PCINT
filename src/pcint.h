@@ -102,6 +102,7 @@ Nov.2014 large changes
 	template<uint8_t PIN>
 	void PCattachInterrupt(HANDLER_TYPE userFunc, uint8_t mode) {
 	  #ifdef PCINT_NO_MAPS
+			PCintFunc[PIN]=userFunc;
 	    attachInterrupt(digitalPinToInterrupt(PIN),PCint<PIN>,mode);
 	  #else
 			PCattachInterrupt(PIN,userFunc,mode);
