@@ -3,3 +3,7 @@
 .gcc-flags.json
 .piolibdeps
 *.gch
+lib
+.travis.yml
+!/.travis.yml
+platformio.ini
