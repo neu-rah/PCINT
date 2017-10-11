@@ -34,7 +34,7 @@ Nov.2014 large changes
 	#endif
 	defined(RSITE_TEENSY3) || defined(ARDUINO_SAM_DUE)*/
 
-	#if defined(__arm__)
+	#if defined(__arm__) || defined(ESP8266)
 		#warning Compiling for arm
 		#define PCINT_NO_MAPS
 	#endif
