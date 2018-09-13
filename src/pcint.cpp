@@ -3,7 +3,7 @@
 #ifdef PCINT_NO_MAPS
   HANDLER_TYPE PCintFunc[NUM_DIGITAL_PINS];
   template<int N>  void PCint() {PCintFunc[N]();}
-  //static voidFuncPtr PCints[NUM_DIGITAL_PINS];
+//static voidFuncPtr PCints[NUM_DIGITAL_PINS];
   //PCints[0]=PCint<0>;
   //PCints[1]=PCint<1>;
 #else

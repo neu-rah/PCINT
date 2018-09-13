@@ -34,15 +34,13 @@ Nov.2014 large changes
 	#endif
 	defined(RSITE_TEENSY3) || defined(ARDUINO_SAM_DUE)*/
 
-	#if defined(__arm__) || defined(ESP8266)
+	#if defined(__arm__) || defined(ESP8266) || defined(ESP32)
 		#warning Compiling for arm
 		#define PCINT_NO_MAPS
 	#endif
 
 	#ifndef PCINT_NO_MAPS
-	// PCINT reverse map
-	// because some avr's (like 2560) have a messed map we got to have this detailed pin reverse map
-	// still this makes the PCINT automatization very slow, risking interrupt collision
+		// PCINT reverse map
 		#if defined(digital_pin_to_pcint)
 			#define digitalPinFromPCINTSlot(slot,bit) pgm_read_byte(digital_pin_to_pcint+(((slot)<<3)+(bit)))
 			#define pcintPinMapBank(slot) ((uint8_t*)((uint8_t*)digital_pin_to_pcint+((slot)<<3)))
@@ -50,9 +48,9 @@ Nov.2014 large changes
 			#warning using maps!
 			#if ( defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega16u4__) )
 				//UNO
-				const uint8_t pcintPinMap[3][8] PROGMEM={{8,9,10,11,12,13,-1,-1},{14,15,16,17,18,19,20,21},{0,1,2,3,4,5,6,7}};
+				const uint8_t pcintPinMap[3][8] PROGMEM={{8,9,10,11,12,13,0x80,0x80},{14,15,16,17,18,19,20,21},{0,1,2,3,4,5,6,7}};
 			#elif ( defined(__AVR_ATmega2560__) )
-				const uint8_t pcintPinMap[3][8] PROGMEM={{53,52,51,50,10,11,12,13},{0,15,14,-1,-1,-1,-1,-1},{A8,A9,A10,A11,A12,A13,A14,A15}};
+				const uint8_t pcintPinMap[3][8] PROGMEM={{53,52,51,50,10,11,12,13},{0,15,14,0x80,0x80,0x80,0x80,0x80},{A8,A9,A10,A11,A12,A13,A14,A15}};
 			#elif ( defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega644__))
 				#error "uC PCINT REVERSE MAP IS NOT DEFINED, ATmega1284P variant unknown"
 				//run the mkPCIntMap example to obtain a map for your board!
@@ -93,7 +91,7 @@ Nov.2014 large changes
 	// common code for isr handler. "port" is the PCINT number.
 	// there isn't really a good way to back-map ports and masks to pins.
 	// here we consider only the first change found ignoring subsequent, assuming no interrupt cascade
-	static void PCint(uint8_t port);
+	// static void PCint(uint8_t port);
 
 	#endif
 	/*
