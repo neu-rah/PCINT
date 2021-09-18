@@ -7,7 +7,7 @@
   //PCints[0]=PCint<0>;
   //PCints[1]=PCint<1>;
 #else
-  static int PCintMode[3][8];
+  static uint8_t PCintMode[3][8];
   static HANDLER_TYPE PCintFunc[3][8];
   static uint8_t PCintLast[3];
 
