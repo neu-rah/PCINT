@@ -9,7 +9,7 @@
 #else
   static int PCintMode[3][8];
   static HANDLER_TYPE PCintFunc[3][8];
-  static bool PCintLast[3][8];//?we can use only 3 bytes... but will use more processing power calculating masks
+  static uint8_t PCintLast[3];
 
   void PCattachInterrupt(uint8_t pin,HANDLER_TYPE userFunc, uint8_t mode) {
     volatile uint8_t *pcmask=digitalPinToPCMSK(pin);
@@ -20,7 +20,11 @@
     PCintMode[pcicrBit][bit] = mode;
     PCintFunc[pcicrBit][bit] = userFunc;
     //initialize last status flags
-    PCintLast[pcicrBit][bit]=(*portInputRegister(digitalPinToPort(pin)))&digitalPinToBitMask(pin);
+    if ((*portInputRegister(digitalPinToPort(pin)))&digitalPinToBitMask(pin)) {
+      PCintLast[pcicrBit] |= mask;
+    } else {
+      PCintLast[pcicrBit] &= ~mask;
+    }
     // set the mask
     *pcmask |= mask;
     // enable the interrupt
@@ -50,8 +54,10 @@
       //uint8_t mask = (1<<bit);
       if (PCintFunc[port][i]!=NULL) {//only check active pins
         bool stat=(*portInputRegister(digitalPinToPort(p)))&digitalPinToBitMask(p);
-        if (PCintLast[port][i]^stat) {//pin changed!
-          PCintLast[port][i]=stat;//register change
+	uint8_t mask = 1<<i;
+	bool last = (PCintLast[port] & mask) != 0;
+        if (last^stat) {//pin changed!
+          PCintLast[port] ^= mask;//register change
           if (
             (PCintMode[port][i]==CHANGE)
             || ((stat)&&(PCintMode[port][i]==RISING))
