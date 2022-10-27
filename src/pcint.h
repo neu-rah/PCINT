@@ -82,6 +82,13 @@ Nov.2014 large changes
 	};
 
 	#ifdef PCINT_NO_MAPS
+	  #if  defined(__STM32F1__) || defined(__STM32F4__) // https://github.com/rogerclarkmelbourne/Arduino_STM32
+	    #define INT_MODE_TYPE ExtIntTriggerMode
+	    #define NUM_DIGITAL_PINS BOARD_NR_GPIO_PINS
+	  #else
+            #define INT_MODE_TYPE uint8_t
+	  #endif
+	  
 	  extern HANDLER_TYPE PCintFunc[NUM_DIGITAL_PINS];
 	  template<uint8_t N> void PCint() {PCintFunc[N]();}
 	#else
@@ -98,7 +105,7 @@ Nov.2014 large changes
 	 * attach an interrupt to a specific pin using pin change interrupts.
 	 */
 	template<uint8_t PIN>
-	void PCattachInterrupt(HANDLER_TYPE userFunc, uint8_t mode) {
+	void PCattachInterrupt(HANDLER_TYPE userFunc, INT_MODE_TYPE mode) {
 	  #ifdef PCINT_NO_MAPS
 			PCintFunc[PIN]=userFunc;
 	    attachInterrupt(digitalPinToInterrupt(PIN),PCint<PIN>,mode);
