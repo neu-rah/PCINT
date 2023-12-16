@@ -104,6 +104,8 @@ Nov.2014 large changes
 	/*
 	 * attach an interrupt to a specific pin using pin change interrupts.
 	 */
+	#define INT_MODE_TYPE uint8_t
+
 	template<uint8_t PIN>
 	void PCattachInterrupt(HANDLER_TYPE userFunc, INT_MODE_TYPE mode) {
 	  #ifdef PCINT_NO_MAPS
